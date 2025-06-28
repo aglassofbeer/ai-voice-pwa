@@ -9,10 +9,10 @@
     section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
     h2 { font-size: 1.2em; margin-bottom: 10px; }
     button { margin: 5px; padding: 8px 16px; }
-    .settings label {
-      display: block;
-      margin-bottom: 0;
-    }
+    .settings label { display: block; margin-bottom: 0; }
+    #chatLog { white-space: pre-wrap; border-top: 1px solid #ddd; margin-top: 10px; padding-top: 10px; font-size: 0.95em; }
+    .user { color: #444; }
+    .assistant { color: #0066cc; }
   </style>
 </head>
 <body>
@@ -68,10 +68,20 @@
         </select>
       </label>
     </div>
+
+    <div id="chatLog"></div>
   </section>
 
   <script>
     const serverUrl = "https://ai-voice-server-31vd.onrender.com";
+    const chatLogElem = document.getElementById("chatLog");
+
+    const appendToChatLog = (role, text) => {
+      const div = document.createElement("div");
+      div.className = role === "user" ? "user" : "assistant";
+      div.textContent = (role === "user" ? "🧑 " : "🤖 ") + text;
+      chatLogElem.appendChild(div);
+    };
 
     const startRecording = async (onStopCallback) => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -110,12 +120,20 @@
           body: formData
         });
 
-        const audioBlob = await res.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
+        const data = await res.json();
+
+        // 音声再生
         const audioElem = document.getElementById("fullAudio");
+        const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
+        const audioUrl = URL.createObjectURL(audioBlob);
         audioElem.src = audioUrl;
-        document.getElementById("fullStatus").textContent = "再生準備完了";
         audioElem.play();
+
+        // 会話履歴に表示
+        appendToChatLog("user", data.whisper);
+        appendToChatLog("assistant", data.reply);
+
+        document.getElementById("fullStatus").textContent = "再生完了";
       });
 
       document.getElementById("fullRecBtn").disabled = true;
