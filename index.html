@@ -6,47 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AIボイスアシスタント</title>
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    button { margin: 10px; padding: 10px 20px; }
     .recording-indicator {
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      background-color: red;
-      display: inline-block;
-      margin-left: 10px;
-      animation: blink 1s infinite;
-      vertical-align: middle;
+      width: 15px; height: 15px; border-radius: 50%; background-color: red;
+      display: inline-block; margin-left: 10px; animation: blink 1s infinite; vertical-align: middle;
     }
     @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0; }
-      100% { opacity: 1; }
+      0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; }
     }
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>🎤 AIボイスアシスタント</h1>
+  <h1>🎤 音声エコーテスト</h1>
 
   <div>
     <button id="recordBtn">🔴 録音開始</button>
     <button id="stopBtn" disabled>⏹ 停止・送信</button>
     <span id="indicator" class="recording-indicator hidden"></span>
-  </div>
-
-  <div>
-    <button id="localRecBtn">🎙 録音（ローカル再生用）</button>
-    <button id="localPlayBtn" disabled>▶ 再生</button>
   </div>
 
   <p id="status">再生準備完了 🎧</p>
@@ -55,48 +33,42 @@
   <script>
     const recordBtn = document.getElementById("recordBtn");
     const stopBtn = document.getElementById("stopBtn");
-    const localRecBtn = document.getElementById("localRecBtn");
-    const localPlayBtn = document.getElementById("localPlayBtn");
     const status = document.getElementById("status");
-    const audio = document.getElementById("audio");
     const indicator = document.getElementById("indicator");
+    const audio = document.getElementById("audio");
 
     let mediaRecorder;
     let audioChunks = [];
 
-    let localMediaRecorder;
-    let localAudioChunks = [];
-
-    // 🎤 AI対話用録音処理
     recordBtn.onclick = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
       audioChunks = [];
 
       mediaRecorder.ondataavailable = (e) => {
         audioChunks.push(e.data);
       };
 
+      mediaRecorder.start();
       recordBtn.disabled = true;
       stopBtn.disabled = false;
-      status.textContent = "録音中...";
       indicator.classList.remove("hidden");
+      status.textContent = "録音中...";
     };
 
     stopBtn.onclick = async () => {
       mediaRecorder.stop();
-      recordBtn.disabled = false;
       stopBtn.disabled = true;
-      status.textContent = "送信中...";
+      recordBtn.disabled = false;
       indicator.classList.add("hidden");
+      status.textContent = "送信中...";
 
       mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunks, { type: "audio/webm" });
         const formData = new FormData();
         formData.append("audio", blob, "voice.webm");
 
-        const response = await fetch("https://ai-voice-server-xxxxx.onrender.com/voice", {
+        const response = await fetch("https://ai-voice-server-xxxxx.onrender.com/echo-audio", {
           method: "POST",
           body: formData
         });
@@ -106,39 +78,6 @@
         audio.src = url;
         status.textContent = "再生準備完了 🎧";
       };
-    };
-
-    // 🎙 ローカル録音＆再生（GPT非連携）
-    localRecBtn.onclick = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localMediaRecorder = new MediaRecorder(stream);
-      localAudioChunks = [];
-
-      localMediaRecorder.ondataavailable = (e) => {
-        localAudioChunks.push(e.data);
-      };
-
-      localMediaRecorder.onstop = () => {
-        const blob = new Blob(localAudioChunks, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-        audio.src = url;
-        status.textContent = "ローカル録音完了 🎧";
-        localPlayBtn.disabled = false;
-        localRecBtn.disabled = false;
-      };
-
-      localMediaRecorder.start();
-      status.textContent = "🎙ローカル録音中...";
-      localRecBtn.disabled = true;
-      localPlayBtn.disabled = true;
-
-      setTimeout(() => {
-        localMediaRecorder.stop();
-      }, 3000); // 自動停止 3秒
-    };
-
-    localPlayBtn.onclick = () => {
-      audio.play();
     };
   </script>
 </body>
