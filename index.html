@@ -37,7 +37,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 14em;
+      max-height: 21em; /* ← 高さを1.5倍に拡大 */
       overflow-y: auto;
       padding: 5px;
       border-top: 1px solid #ddd;
@@ -88,6 +88,7 @@
       <label>GPTモデル:
         <select id="gptModelSelect">
           <option value="gpt-4o" selected>gpt-4o</option>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
           <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
         </select>
       </label>
@@ -173,14 +174,12 @@
 
         const data = await res.json();
 
-        // 音声再生
         const audioElem = document.getElementById("fullAudio");
         const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
         const audioUrl = URL.createObjectURL(audioBlob);
         audioElem.src = audioUrl;
         audioElem.play();
 
-        // 会話履歴に表示
         appendToChatLog("user", data.whisper);
         appendToChatLog("assistant", data.reply);
 
