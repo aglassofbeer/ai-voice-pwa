@@ -87,116 +87,11 @@
 
       <label>GPTモデル:
         <select id="gptModelSelect">
+          <option value="gpt-4o" selected>gpt-4o</option>
           <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-          <option value="gpt-4o">gpt-4o</option>
         </select>
       </label>
 
       <label>TTSモデル:
         <select id="ttsModelSelect">
-          <option value="tts-1">tts-1</option>
-          <option value="tts-1-hd">tts-1-hd</option>
-          <option value="gpt-4o-mini-tts">gpt-4o-mini-tts</option>
-        </select>
-      </label>
-
-      <label>音声:
-        <select id="voiceSelect">
-          <option value="alloy">alloy</option>
-          <option value="echo">echo</option>
-          <option value="fable">fable</option>
-          <option value="onyx">onyx</option>
-          <option value="nova">nova</option>
-          <option value="shimmer">shimmer</option>
-        </select>
-      </label>
-
-      <label>会話スタイル:
-        <select id="chatModeSelect">
-          <option value="chat">会話モード</option>
-          <option value="text">テキストモード</option>
-        </select>
-      </label>
-    </div>
-
-    <div id="chatLog"></div>
-  </section>
-
-  <script>
-    const serverUrl = "https://ai-voice-server-31vd.onrender.com";
-    const chatLogElem = document.getElementById("chatLog");
-
-    const appendToChatLog = (role, text) => {
-      const div = document.createElement("div");
-      div.className = role === "user" ? "user" : "assistant";
-      div.textContent = text;
-      chatLogElem.appendChild(div);
-      chatLogElem.scrollTop = chatLogElem.scrollHeight;
-    };
-
-    const startRecording = async (onStopCallback) => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      let chunks = [];
-
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/webm" });
-        onStopCallback(blob);
-      };
-
-      recorder.start();
-      return recorder;
-    };
-
-    let fullRecorder;
-    document.getElementById("fullRecBtn").onclick = async () => {
-      document.getElementById("fullRecBtn").textContent = "⏺ 録音中...";
-      document.getElementById("fullRecBtn").style.backgroundColor = "red";
-
-      fullRecorder = await startRecording(async (blob) => {
-        document.getElementById("fullStatus").textContent = "送信中...";
-
-        const formData = new FormData();
-        formData.append("audio", blob, "voice.webm");
-        formData.append("lang", document.getElementById("langSelect").value);
-        formData.append("gptModel", document.getElementById("gptModelSelect").value);
-        formData.append("ttsModel", document.getElementById("ttsModelSelect").value);
-        formData.append("voice", document.getElementById("voiceSelect").value);
-        formData.append("chatMode", document.getElementById("chatModeSelect").value);
-
-        const res = await fetch(`${serverUrl}/voice`, {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-
-        // 音声再生
-        const audioElem = document.getElementById("fullAudio");
-        const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioElem.src = audioUrl;
-        audioElem.play();
-
-        // 会話履歴に表示
-        appendToChatLog("user", data.whisper);
-        appendToChatLog("assistant", data.reply);
-
-        document.getElementById("fullStatus").textContent = "再生完了";
-      });
-
-      document.getElementById("fullRecBtn").disabled = true;
-      document.getElementById("fullStopBtn").disabled = false;
-    };
-
-    document.getElementById("fullStopBtn").onclick = () => {
-      fullRecorder.stop();
-      document.getElementById("fullRecBtn").disabled = false;
-      document.getElementById("fullStopBtn").disabled = true;
-      document.getElementById("fullRecBtn").textContent = "🎙 録音";
-      document.getElementById("fullRecBtn").style.backgroundColor = "";
-    };
-  </script>
-</body>
-</html>
+          <option value="gpt-4o-mini-tts" selected>gpt-4o-mini-
