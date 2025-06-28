@@ -106,10 +106,10 @@ document.getElementById("fullRecBtn").onclick = async () => {
     document.getElementById("fullStatus").textContent = "送信中...";  
     const formData = new FormData();  
     formData.append("audio", blob, "voice.webm");  
-    const res = await fetch(`${serverUrl}/voice`, { method: "POST", body: formData });  
-    const audioBlob = await res.blob();  
     const lang = document.getElementById("langSelect").value;
     formData.append("lang", lang);
+    const res = await fetch(`${serverUrl}/voice`, { method: "POST", body: formData });  
+    const audioBlob = await res.blob();  
     document.getElementById("fullAudio").src = URL.createObjectURL(audioBlob);  
     document.getElementById("fullStatus").textContent = "再生準備完了";  
   });  
