@@ -37,7 +37,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 21em; /* ← 高さを1.5倍に拡大 */
+      max-height: 21em; /* 約1.5倍の高さ */
       overflow-y: auto;
       padding: 5px;
       border-top: 1px solid #ddd;
@@ -62,6 +62,17 @@
       align-self: flex-end;
       background-color: #d8ebff;
       color: #003366;
+    }
+
+    /* ⏳ アニメーション */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .spin-icon {
+      display: inline-block;
+      animation: spin 1s linear infinite;
     }
   </style>
 </head>
@@ -184,6 +195,12 @@
         appendToChatLog("assistant", data.reply);
 
         document.getElementById("fullStatus").textContent = "再生完了";
+
+        // ボタン戻す
+        const stopBtn = document.getElementById("fullStopBtn");
+        stopBtn.innerHTML = "⏹ 停止・送信";
+        stopBtn.style.backgroundColor = "";
+        stopBtn.disabled = false;
       });
 
       document.getElementById("fullRecBtn").disabled = true;
@@ -192,8 +209,13 @@
 
     document.getElementById("fullStopBtn").onclick = () => {
       fullRecorder.stop();
+
+      const stopBtn = document.getElementById("fullStopBtn");
+      stopBtn.innerHTML = '<span class="spin-icon">⏳</span> 送信中...';
+      stopBtn.disabled = true;
+      stopBtn.style.backgroundColor = "#ccc";
+
       document.getElementById("fullRecBtn").disabled = false;
-      document.getElementById("fullStopBtn").disabled = true;
       document.getElementById("fullRecBtn").textContent = "🎙 録音";
       document.getElementById("fullRecBtn").style.backgroundColor = "";
     };
