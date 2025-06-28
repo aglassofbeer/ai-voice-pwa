@@ -37,7 +37,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 21em; /* 約1.5倍の高さ */
+      max-height: 21em;
       overflow-y: auto;
       padding: 5px;
       border-top: 1px solid #ddd;
@@ -64,7 +64,6 @@
       color: #003366;
     }
 
-    /* ⏳ アニメーション */
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -73,6 +72,12 @@
     .spin-icon {
       display: inline-block;
       animation: spin 1s linear infinite;
+    }
+
+    #responseTimer {
+      margin-left: 10px;
+      font-size: 0.9em;
+      color: #555;
     }
   </style>
 </head>
@@ -84,6 +89,7 @@
 
     <button id="fullRecBtn">🎙 録音</button>
     <button id="fullStopBtn" disabled>⏹ 停止・送信</button>
+    <span id="responseTimer"></span>
     <audio id="fullAudio" controls></audio>
     <p id="fullStatus"></p>
 
@@ -137,6 +143,10 @@
   <script>
     const serverUrl = "https://ai-voice-server-31vd.onrender.com";
     const chatLogElem = document.getElementById("chatLog");
+    const responseTimerElem = document.getElementById("responseTimer");
+
+    let responseStartTime = null;
+    let timerInterval = null;
 
     const appendToChatLog = (role, text) => {
       const div = document.createElement("div");
@@ -178,12 +188,22 @@
         formData.append("voice", document.getElementById("voiceSelect").value);
         formData.append("chatMode", document.getElementById("chatModeSelect").value);
 
+        responseStartTime = Date.now();
+        timerInterval = setInterval(() => {
+          const elapsed = ((Date.now() - responseStartTime) / 1000).toFixed(1);
+          responseTimerElem.textContent = `⏱ ${elapsed} 秒`;
+        }, 100);
+
         const res = await fetch(`${serverUrl}/voice`, {
           method: "POST",
           body: formData
         });
 
         const data = await res.json();
+
+        clearInterval(timerInterval);
+        const finalElapsed = ((Date.now() - responseStartTime) / 1000).toFixed(1);
+        responseTimerElem.textContent = `⏱ ${finalElapsed} 秒`;
 
         const audioElem = document.getElementById("fullAudio");
         const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
@@ -196,7 +216,6 @@
 
         document.getElementById("fullStatus").textContent = "再生完了";
 
-        // ボタン戻す
         const stopBtn = document.getElementById("fullStopBtn");
         stopBtn.innerHTML = "⏹ 停止・送信";
         stopBtn.style.backgroundColor = "";
@@ -218,6 +237,8 @@
       document.getElementById("fullRecBtn").disabled = false;
       document.getElementById("fullRecBtn").textContent = "🎙 録音";
       document.getElementById("fullRecBtn").style.backgroundColor = "";
+
+      responseTimerElem.textContent = "⏱ 0.0 秒";
     };
   </script>
 </body>
