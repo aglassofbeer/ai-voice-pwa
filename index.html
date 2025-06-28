@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -113,27 +114,27 @@
       localMediaRecorder = new MediaRecorder(stream);
       localAudioChunks = [];
 
+      localMediaRecorder.ondataavailable = (e) => {
+        localAudioChunks.push(e.data);
+      };
+
+      localMediaRecorder.onstop = () => {
+        const blob = new Blob(localAudioChunks, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        audio.src = url;
+        status.textContent = "ローカル録音完了 🎧";
+        localPlayBtn.disabled = false;
+        localRecBtn.disabled = false;
+      };
+
       localMediaRecorder.start();
       status.textContent = "🎙ローカル録音中...";
       localRecBtn.disabled = true;
       localPlayBtn.disabled = true;
 
-      localMediaRecorder.ondataavailable = (e) => {
-        localAudioChunks.push(e.data);
-      };
-
       setTimeout(() => {
         localMediaRecorder.stop();
       }, 3000); // 自動停止 3秒
-    };
-
-    localMediaRecorder?.onstop = () => {
-      const blob = new Blob(localAudioChunks, { type: "audio/webm" });
-      const url = URL.createObjectURL(blob);
-      audio.src = url;
-      status.textContent = "ローカル録音完了 🎧";
-      localPlayBtn.disabled = false;
-      localRecBtn.disabled = false;
     };
 
     localPlayBtn.onclick = () => {
