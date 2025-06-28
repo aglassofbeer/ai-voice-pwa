@@ -9,6 +9,10 @@
     section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
     h2 { font-size: 1.2em; margin-bottom: 10px; }
     button { margin: 5px; padding: 8px 16px; }
+    .settings label {
+      display: block;
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -22,42 +26,48 @@
     <audio id="fullAudio" controls></audio>
     <p id="fullStatus"></p>
 
-    <label>言語:
-      <select id="langSelect">
-        <option value="ja">日本語</option>
-        <option value="en">English</option>
-        <option value="zh">中文</option>
-      </select>
-    </label>
-    <label>GPTモデル:
-      <select id="gptModelSelect">
-        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-        <option value="gpt-4o">gpt-4o</option>
-      </select>
-    </label>
-    <label>TTSモデル:
-      <select id="ttsModelSelect">
-        <option value="tts-1">tts-1</option>
-        <option value="tts-1-hd">tts-1-hd</option>
-        <option value="gpt-4o-mini-tts">gpt-4o-mini-tts</option>
-      </select>
-    </label>
-    <label>音声:
-      <select id="voiceSelect">
-        <option value="alloy">alloy</option>
-        <option value="echo">echo</option>
-        <option value="fable">fable</option>
-        <option value="onyx">onyx</option>
-        <option value="nova">nova</option>
-        <option value="shimmer">shimmer</option>
-      </select>
-    </label>
-    <label>会話スタイル:
-      <select id="chatModeSelect">
-        <option value="chat">会話モード</option>
-        <option value="text">テキストモード</option>
-      </select>
-    </label>
+    <div class="settings">
+      <label>言語:
+        <select id="langSelect">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </label>
+
+      <label>GPTモデル:
+        <select id="gptModelSelect">
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+          <option value="gpt-4o">gpt-4o</option>
+        </select>
+      </label>
+
+      <label>TTSモデル:
+        <select id="ttsModelSelect">
+          <option value="tts-1">tts-1</option>
+          <option value="tts-1-hd">tts-1-hd</option>
+          <option value="gpt-4o-mini-tts">gpt-4o-mini-tts</option>
+        </select>
+      </label>
+
+      <label>音声:
+        <select id="voiceSelect">
+          <option value="alloy">alloy</option>
+          <option value="echo">echo</option>
+          <option value="fable">fable</option>
+          <option value="onyx">onyx</option>
+          <option value="nova">nova</option>
+          <option value="shimmer">shimmer</option>
+        </select>
+      </label>
+
+      <label>会話スタイル:
+        <select id="chatModeSelect">
+          <option value="chat">会話モード</option>
+          <option value="text">テキストモード</option>
+        </select>
+      </label>
+    </div>
   </section>
 
   <script>
@@ -89,7 +99,6 @@
         const formData = new FormData();
         formData.append("audio", blob, "voice.webm");
 
-        // 設定情報送信
         formData.append("lang", document.getElementById("langSelect").value);
         formData.append("gptModel", document.getElementById("gptModelSelect").value);
         formData.append("ttsModel", document.getElementById("ttsModelSelect").value);
