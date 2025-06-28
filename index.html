@@ -14,7 +14,6 @@
 <body>
   <h1>🎤 AIボイスアシスタント</h1>
 
-  <!-- 音声会話 -->
   <section>
     <h2>🗣 録音 → Whisper → GPT → TTS</h2>
 
@@ -53,6 +52,12 @@
         <option value="shimmer">shimmer</option>
       </select>
     </label>
+    <label>会話スタイル:
+      <select id="chatModeSelect">
+        <option value="chat">会話モード</option>
+        <option value="text">テキストモード</option>
+      </select>
+    </label>
   </section>
 
   <script>
@@ -84,11 +89,12 @@
         const formData = new FormData();
         formData.append("audio", blob, "voice.webm");
 
-        // 追加：各設定を送信
+        // 設定情報送信
         formData.append("lang", document.getElementById("langSelect").value);
         formData.append("gptModel", document.getElementById("gptModelSelect").value);
         formData.append("ttsModel", document.getElementById("ttsModelSelect").value);
         formData.append("voice", document.getElementById("voiceSelect").value);
+        formData.append("chatMode", document.getElementById("chatModeSelect").value);
 
         const res = await fetch(`${serverUrl}/voice`, {
           method: "POST",
