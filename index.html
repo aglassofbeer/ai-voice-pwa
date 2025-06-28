@@ -31,6 +31,11 @@
     <button id="fullRecBtn">🎙 録音</button>  
     <button id="fullStopBtn" disabled>⏹ 停止・送信</button>  
     <audio id="fullAudio" controls></audio>  
+    <select id="langSelect">
+      <option value="ja">日本語</option>
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
     <p id="fullStatus"></p>  
   </section>  <script>  
     const serverUrl = "https://ai-voice-server-31vd.onrender.com";  // 1. テキスト→TTS  
@@ -103,6 +108,8 @@ document.getElementById("fullRecBtn").onclick = async () => {
     formData.append("audio", blob, "voice.webm");  
     const res = await fetch(`${serverUrl}/voice`, { method: "POST", body: formData });  
     const audioBlob = await res.blob();  
+    const lang = document.getElementById("langSelect").value;
+    formData.append("lang", lang);
     document.getElementById("fullAudio").src = URL.createObjectURL(audioBlob);  
     document.getElementById("fullStatus").textContent = "再生準備完了";  
   });  
