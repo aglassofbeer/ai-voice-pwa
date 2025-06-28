@@ -114,7 +114,15 @@ document.getElementById("fullStopBtn").onclick = () => {
   document.getElementById("fullRecBtn").disabled = false;  
   document.getElementById("fullStopBtn").disabled = true;  
 };
-
+document.getElementById("fullAudio").onloadeddata = () => {
+  document.getElementById("fullAudio").play();
+};
+document.getElementById("fullRecBtn").textContent = "⏺ 録音中...";
+document.getElementById("fullRecBtn").style.backgroundColor = "red";
+document.getElementById("fullRecBtn").textContent = "🎙 録音";
+document.getElementById("fullRecBtn").style.backgroundColor = "";
+    
+    
 </script></body>
 
 </html>
