@@ -89,6 +89,7 @@
 
     <button id="fullRecBtn">🎙 録音</button>
     <button id="fullStopBtn" disabled>⏹ 停止・送信</button>
+    <button id="cancelRecBtn">🛑 やり直し</button>
     <span id="responseTimer"></span>
     <audio id="fullAudio" controls></audio>
     <p id="fullStatus"></p>
@@ -133,6 +134,7 @@
         <select id="chatModeSelect">
           <option value="chat">会話モード</option>
           <option value="text">テキストモード</option>
+          <option value="lesson" selected>レッスンモード</option>
         </select>
       </label>
     </div>
@@ -239,6 +241,16 @@
       document.getElementById("fullRecBtn").style.backgroundColor = "";
 
       responseTimerElem.textContent = "⏱ 0.0 秒";
+    };
+    document.getElementById("cancelRecBtn").onclick = () => {
+      if (fullRecorder && fullRecorder.state === "recording") {
+        fullRecorder.stop();
+      }
+      document.getElementById("fullRecBtn").disabled = false;
+      document.getElementById("fullStopBtn").disabled = true;
+      document.getElementById("fullRecBtn").textContent = "🎙 録音";
+      document.getElementById("fullRecBtn").style.backgroundColor = "";
+      document.getElementById("fullStatus").textContent = "録音キャンセルしました";
     };
   </script>
 </body>
