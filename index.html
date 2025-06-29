@@ -103,6 +103,14 @@
         </select>
       </label>
 
+    <!-- 🔻 Transcription モデル選択 -->
+     <label for="sttModelSelect">STTモデル（音声→テキスト）:</label>
+      <select id="sttModelSelect">
+       <option value="whisper" selected>Whisper（高速・安価）</option>
+       <option value="gpt-4o-transcribe">GPT-4o Transcribe</option>
+       <option value="gpt-4o-mini-transcribe">GPT-4o mini Transcribe</option>
+      </select>
+
       <label>GPTモデル:
         <select id="gptModelSelect">
           <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
@@ -192,6 +200,7 @@
         const formData = new FormData();
         formData.append("audio", blob, "voice.webm");
         formData.append("lang", document.getElementById("langSelect").value);
+        formData.append("stt_model", document.getElementById("sttModelSelect").value);
         formData.append("gptModel", document.getElementById("gptModelSelect").value);
         formData.append("ttsModel", document.getElementById("ttsModelSelect").value);
         formData.append("voice", document.getElementById("voiceSelect").value);
