@@ -149,6 +149,7 @@
 
     let responseStartTime = null;
     let timerInterval = null;
+    let isCancelled = false; // 🔸キャンセルフラグを追加
 
     const appendToChatLog = (role, text) => {
       const div = document.createElement("div");
@@ -166,6 +167,11 @@
 
       recorder.ondataavailable = e => chunks.push(e.data);
       recorder.onstop = () => {
+        if (isCancelled) {
+          console.log("⏹ 録音キャンセルされたため送信をスキップ");
+          isCancelled = false;
+          return;
+        }
         const blob = new Blob(chunks, { type: "audio/webm" });
         onStopCallback(blob);
       };
@@ -244,7 +250,8 @@
     };
     document.getElementById("cancelRecBtn").onclick = () => {
       if (fullRecorder && fullRecorder.state === "recording") {
-        fullRecorder.stop();
+          isCancelled = true; // フラグを立てて送信回避
+          fullRecorder.stop();
       }
       document.getElementById("fullRecBtn").disabled = false;
       document.getElementById("fullStopBtn").disabled = true;
