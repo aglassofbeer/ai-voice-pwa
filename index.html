@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AIボイスアシスタント</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.8; }
+    section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+    h2 { font-size: 1.2em; margin-bottom: 10px; }
+    button { margin: 5px; padding: 8px 16px; }
+    .settings label { display: block; margin-bottom: 0; }
+    #chatLog { display: flex; flex-direction: column; gap: 6px; max-height: 21em; overflow-y: auto; padding: 5px; border-top: 1px solid #ddd; margin-top: 10px; font-size: 0.95em; }
+    .user, .assistant { max-width: 80%; padding: 6px 10px; border-radius: 12px; word-wrap: break-word; }
+    .user { align-self: flex-start; background-color: #f0f0f0; color: #333; }
+    .assistant { align-self: flex-end; background-color: #d8ebff; color: #003366; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .spin-icon { display: inline-block; animation: spin 1s linear infinite; }
+    #responseTimer { margin-left: 10px; font-size: 0.9em; color: #555; }
+    #textSection { display: none; }
+  </style>
+</head>
+<body>
+  <h1>🎤 Chat</h1>
+  <section>
+    <div class="settings">
+      <label>a会話スタイル:
+        <select id="chatStyleSelect">
+          <option value="voice">音声</option>
+          <option value="text">テキスト</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section id="voiceSection">
+    <h2>🗣 録音 → Whisper → GPT → TTS</h2>
+    <button id="voiceRecBtn">🎙 録音</button>
+    <button id="voiceStopBtn" disabled>⏹ 停止・送信</button>
+    <button id="cancelRecBtn">🛑 やり直し</button>
+    <span id="responseTimer"></span>
+    <audio id="voiceAudio" controls></audio>
+  </section>
+
+  <section id="textSection">
+    <h2>✍️ テキスト入力 → GPT → TTS</h2>
+    <textarea id="textInput" rows="3" style="width: 100%;"></textarea><br>
+    <button id="sendTextBtn">送信</button>
+    <audio id="textAudio" controls></audio>
+  </section>
+
+  <section>
+    <div class="settings">
+      <label>言語:
+        <select id="langSelect">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+          <option value="zh" selected>中文</option>
+        </select>
+      </label>
+      <label>STTモデル:
+        <select id="sttModelSelect">
+          <option value="whisper-1">Whisper（高速・安価）</option>
+          <option value="gpt-4o-transcribe">GPT-4o Transcribe</option>
+          <option value="gpt-4o-mini-transcribe" selected>GPT-4o mini Transcribe</option>
+        </select>
+      </label>
+      <label>GPTモデル:
+        <select id="gptModelSelect">
+          <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+        </select>
+      </label>
+      <label>TTSモデル:
+        <select id="ttsModelSelect">
+          <option value="gpt-4o-mini-tts" selected>gpt-4o-mini-tts</option>
+          <option value="tts-1">tts-1</option>
+          <option value="tts-1-hd">tts-1-hd</option>
+        </select>
+      </label>
+      <label>音声:
+        <select id="voiceSelect">
+          <option value="alloy">alloy</option>
+          <option value="echo">echo</option>
+          <option value="fable">fable</option>
+          <option value="onyx">onyx</option>
+          <option value="nova">nova</option>
+          <option value="shimmer">shimmer</option>
+        </select>
+      </label>
+    </div>
+    <div id="chatLog"></div>
+  </section>
+
+  <script>
+    const serverUrl = "https://ai-voice-server-31vd.onrender.com";
+    const chatLogElem = document.getElementById("chatLog");
+    const responseTimerElem = document.getElementById("responseTimer");
+    let responseStartTime = null;
+    let timerInterval = null;
+
+    const appendToChatLog = (role, text) => {
+      const div = document.createElement("div");
+      div.className = role === "user" ? "user" : "assistant";
+      div.textContent = (role === "user" ? "🧑 " : "🤖 ") + text;
+      chatLogElem.appendChild(div);
+      chatLogElem.scrollTop = chatLogElem.scrollHeight;
+    };
+
+    document.getElementById("chatStyleSelect").onchange = e => {
+      const style = e.target.value;
+      document.getElementById("voiceSection").style.display = style === "voice" ? "block" : "none";
+      document.getElementById("textSection").style.display = style === "text" ? "block" : "none";
+    };
+
+    // Text送信処理
+    document.getElementById("sendTextBtn").onclick = async () => {
+      const sendBtn = document.getElementById("sendTextBtn");
+      const text = document.getElementById("textInput").value.trim();
+      if (!text) return;
+      appendToChatLog("user", text);
+      const payload = {
+        text,
+        lang: document.getElementById("langSelect").value,
+        gptModel: document.getElementById("gptModelSelect").value,
+        ttsModel: document.getElementById("ttsModelSelect").value,
+        ttsVoice: document.getElementById("voiceSelect").value
+      };
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<span class="spin-icon">⏳</span> 送信中...';
+      responseStartTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = ((Date.now() - responseStartTime) / 1000).toFixed(1);
+        responseTimerElem.textContent = `⏱ ${elapsed} 秒`;
+      }, 100);
+      const res = await fetch(`${serverUrl}/text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      clearInterval(timerInterval);
+      const finalElapsed = ((Date.now() - responseStartTime) / 1000).toFixed(1);
+      responseTimerElem.textContent = `⏱ ${finalElapsed} 秒`;
+      const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      document.getElementById("textAudio").src = audioUrl;
+      document.getElementById("textAudio").play();
+      appendToChatLog("assistant", data.reply);
+      document.getElementById("textInput").value = "";
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = "送信";
+    };
+
+    // Voice録音処理（送信）
+    let recorder;
+    let chunks = [];
+
+    document.getElementById("voiceRecBtn").onclick = async () => {
+      chunks = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", blob, "voice.webm");
+        formData.append("lang", document.getElementById("langSelect").value);
+        formData.append("stt_model", document.getElementById("sttModelSelect").value);
+        formData.append("gptModel", document.getElementById("gptModelSelect").value);
+        formData.append("ttsModel", document.getElementById("ttsModelSelect").value);
+        formData.append("voice", document.getElementById("voiceSelect").value);
+        formData.append("chatMode", "chat");
+        const stopBtn = document.getElementById("voiceStopBtn");
+        stopBtn.disabled = true;
+        stopBtn.innerHTML = '<span class="spin-icon">⏳</span> 送信中...';
+        responseStartTime = Date.now();
+        timerInterval = setInterval(() => {
+          const elapsed = ((Date.now() - responseStartTime) / 1000).toFixed(1);
+          responseTimerElem.textContent = `⏱ ${elapsed} 秒`;
+        }, 100);
+        const res = await fetch(`${serverUrl}/voice`, {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        clearInterval(timerInterval);
+        const finalElapsed = ((Date.now() - responseStartTime) / 1000).toFixed(1);
+        responseTimerElem.textContent = `⏱ ${finalElapsed} 秒`;
+        const audioBlob = new Blob([Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))], { type: "audio/mpeg" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        document.getElementById("voiceAudio").src = audioUrl;
+        document.getElementById("voiceAudio").play();
+        appendToChatLog("user", data.whisper);
+        appendToChatLog("assistant", data.reply);
+        stopBtn.innerHTML = "⏹ 停止・送信";
+      };
+      recorder.start();
+      document.getElementById("voiceRecBtn").disabled = true;
+      document.getElementById("voiceStopBtn").disabled = false;
+    };
+
+    document.getElementById("voiceStopBtn").onclick = () => {
+      recorder.stop();
+      document.getElementById("voiceRecBtn").disabled = false;
+    };
+  </script>
+</body>
+</html>
